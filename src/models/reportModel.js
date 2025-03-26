@@ -1,28 +1,42 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config//db");
+const mongoose = require("mongoose");
 
-const Report = sequelize.define("Report", {
+const reportSchema = new mongoose.Schema({
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true,
+    type: String,
+    default: () => new mongoose.Types.UUID(),
+    unique: true,
   },
   userId: {
-    type: DataTypes.UUID,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   url: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
+    trim: true,
   },
-  performanceScore: DataTypes.INTEGER,
-  seoScore: DataTypes.INTEGER,
-  accessibilityScore: DataTypes.INTEGER,
-  bestPracticesScore: DataTypes.INTEGER,
+  performanceScore: {
+    type: Number,
+    default: 0,
+  },
+  seoScore: {
+    type: Number,
+    default: 0,
+  },
+  accessibilityScore: {
+    type: Number,
+    default: 0,
+  },
+  bestPracticesScore: {
+    type: Number,
+    default: 0,
+  },
   recommendations: {
-    type: DataTypes.JSON,
-    allowNull: false,
+    type: mongoose.Schema.Types.Mixed, // Allows storing JSON data
+    required: true,
   },
-});
+}, { timestamps: true });
+
+const Report = mongoose.model("Report", reportSchema);
 
 module.exports = Report;

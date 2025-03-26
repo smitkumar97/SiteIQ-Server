@@ -9,26 +9,33 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(req.body, email, password);
-    
+
+    if (!email || !password) return res.status(400).json({ error: "Email & Password required" });
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password: hashedPassword }); // This should work
-    res.json({ message: "User registered successfully" });
+    const newUser = new User({ email, password: hashedPassword });
+
+    await newUser.save();
+    res.status(201).json({ message: "User created successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Error creating user" });
   }
 });
 
-// Login
+//login
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ where: { email } });
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-  const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
-  res.json({ token });
-});
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "3h" });
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ error: "Login failed" });
+  }
+});
 module.exports = router;

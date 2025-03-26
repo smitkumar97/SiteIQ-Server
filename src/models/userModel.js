@@ -1,26 +1,29 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db"); // Import database connection
+const mongoose = require("mongoose");
 
-const User = sequelize.define("User", {
+const userSchema = new mongoose.Schema({
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true,
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    default: () => new mongoose.Types.UUID(), // Generates a UUID
     unique: true,
   },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+  },
   password: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   subscriptionPlan: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    defaultValue: 'free'
-  }
-});
+    type: String,
+    enum: ["free", "premium", "enterprise"],
+    default: "free",
+  },
+}, { timestamps: true });
+
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

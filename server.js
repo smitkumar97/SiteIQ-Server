@@ -6,8 +6,8 @@ const { graphqlHTTP } = require("express-graphql");
 const schema = require("./schema"); // GraphQL schema
 const authRoutes = require('./src/routes/authRoute');
 const reportRoutes = require('./src/routes/reportRoute');
-const { sequelize } = require("./src/config/db");
-const User = require("./src/models/userModel");
+const mongoose = require("mongoose");
+const connectDB = require("./src/config/db");
 const app = express();
 require("dotenv").config();
 
@@ -31,4 +31,5 @@ app.use(
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  connectDB();
 });

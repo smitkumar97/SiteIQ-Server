@@ -1,39 +1,43 @@
 const express = require("express");
 const chromeLauncher = require("chrome-launcher");
-const { verifyToken } = require("../middleware/authMiddleware"); // Import JWT middleware
-const Report = require("../models/reportModel"); // Import Sequelize model
-// const generateAIRecommendations = require("../utils/aiRecommendations");
-
+const { verifyToken } = require("../middleware/authMiddleware");
+const Report = require("../models/reportModel");
+const generateGeminiRecommendations = require("../utils/genAiRecomendation");
 const router = express.Router();
 
 router.post("/generate", verifyToken, async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "URL is required" });
-
     const { default: lighthouse } = await import("lighthouse");
+    
+    const chrome = await chromeLauncher.launch({ 
+      chromeFlags: ["--headless"], 
+    });
 
-    const chrome = await chromeLauncher.launch({ chromeFlags: ["--headless"] });
     const options = { logLevel: "info", output: "json", port: chrome.port };
 
     const runnerResult = await lighthouse(url, options);
-    // Generate AI-based recommendations
-    // const aiRecommendations = await generateAIRecommendations(Report);
     await chrome.kill();
-
+    console.log(req);
+    
     const { categories } = runnerResult.lhr;
     const reportData = {
-      userId: req.user.id, // Get user ID from token
+      userId: req.user.userId,
       url,
       performanceScore: Math.round(categories.performance.score * 100),
       seoScore: Math.round(categories.seo.score * 100),
       accessibilityScore: Math.round(categories.accessibility.score * 100),
       bestPracticesScore: Math.round(categories["best-practices"].score * 100),
-      // aiRecommendations: []
-      recommendations: runnerResult.lhr.audits,
+      recommendations: '',
     };
 
-    const newReport = await Report.create(reportData);
+    const aiReport = await generateGeminiRecommendations(reportData);
+    reportData.recommendations = aiReport;
+    
+    const newReport = new Report(reportData);
+    await newReport.save();
+
     res.json(newReport);
   } catch (error) {
     console.error("Error generating report:", error);
@@ -43,10 +47,7 @@ router.post("/generate", verifyToken, async (req, res) => {
 
 router.get("/history", verifyToken, async (req, res) => {
   try {
-    const reports = await Report.findAll({
-      where: { userId: req.user.id },
-      order: [["createdAt", "DESC"]],
-    });
+    const reports = await Report.find({ userId: req.user.userId }).sort({ createdAt: -1 });
     res.json(reports);
   } catch (error) {
     console.error("Error fetching report history:", error);
