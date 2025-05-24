@@ -5,18 +5,39 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function generateGeminiRecommendations(report) {
   const prompt = `
-  Analyze the following Lighthouse audit report and suggest improvements:
+You are an expert in web performance, SEO, accessibility, and best practices for web development.
 
-  - Performance Score: ${report.performanceScore}
-  - SEO Score: ${report.seoScore}
-  - Accessibility Score: ${report.accessibilityScore}
-  - Best Practices Score: ${report.bestPracticesScore}
+Below is a Lighthouse audit report. Based on the scores and findings, generate **actionable recommendations**. Organize them clearly under the following categories:
 
-  Recommendations:
-  ${JSON.stringify(report.recommendations, null, 2)}
+1. Performance
+2. SEO
+3. Accessibility
+4. Best Practices
 
-  Provide a list of **actionable suggestions** for improving the website performance.
-  `;
+Return your response as a object with the following structure:
+
+{
+  "Performance": {
+    "keyIssuesObserved": [...],
+    "recommendedActions": [
+      {
+        "action": "...",
+        "impact": "High | Medium | Low",
+        "details": "..."
+      }
+    ]
+  },
+  "SEO": { ... },
+  "Accessibility": { ... },
+  "BestPractices": { ... }
+}
+
+  Here is the report:
+
+  Performance Score: ${report.performanceScore}
+  SEO Score: ${report.seoScore}
+  Accessibility Score: ${report.accessibilityScore}
+  Best Practices Score: ${report.bestPracticesScore}`;
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -26,7 +47,9 @@ async function generateGeminiRecommendations(report) {
       contents: [
         {
           role: "user",
-          parts: [{ text: "You are an expert in web performance optimization." }],
+          parts: [
+            { text: "You are an expert in web performance optimization." },
+          ],
         },
         {
           role: "user",
@@ -35,8 +58,19 @@ async function generateGeminiRecommendations(report) {
       ],
     });
 
-    const rawResponse = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
-    return rawResponse;
+    const cleanedJson = result.response.candidates?.[0]?.content?.parts?.[0]?.text
+      .replace(/```json\s*|\s*```/g, '')
+      .trim();
+    
+    let finalResponse;
+    try {
+      finalResponse = JSON.parse(cleanedJson);
+      console.log("Successfully parsed JSON:", finalResponse);
+    } catch (error) {
+      console.error("Failed to parse JSON:", error);
+    }
+
+    return finalResponse;
   } catch (error) {
     console.error("Gemini API Error:", error);
     return "AI recommendation service is currently unavailable.";

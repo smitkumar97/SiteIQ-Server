@@ -19,7 +19,6 @@ router.post("/generate", verifyToken, async (req, res) => {
 
     const runnerResult = await lighthouse(url, options);
     await chrome.kill();
-    console.log(req);
     
     const { categories } = runnerResult.lhr;
     const reportData = {

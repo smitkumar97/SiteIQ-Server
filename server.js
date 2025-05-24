@@ -6,7 +6,7 @@ const { graphqlHTTP } = require("express-graphql");
 const schema = require("./schema"); // GraphQL schema
 const authRoutes = require('./src/routes/authRoute');
 const reportRoutes = require('./src/routes/reportRoute');
-const mongoose = require("mongoose");
+const emailRoute = require('./src/routes/nodeMailer');
 const connectDB = require("./src/config/db");
 const app = express();
 require("dotenv").config();
@@ -20,6 +20,7 @@ app.use(express.json());
 // Routes
 app.use("/auth", authRoutes);
 app.use("/reports", reportRoutes);
+app.use("/visit", emailRoute);
 app.use(
   "/graphql",
   graphqlHTTP({
@@ -27,6 +28,10 @@ app.use(
     graphiql: true, // Enable GraphQL UI
   })
 );
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', uptime: process.uptime() });
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
