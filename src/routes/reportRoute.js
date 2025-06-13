@@ -10,16 +10,16 @@ router.post("/generate", verifyToken, async (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "URL is required" });
     const { default: lighthouse } = await import("lighthouse");
-    
-    const chrome = await chromeLauncher.launch({ 
-      chromeFlags: ["--headless"], 
+
+    const chrome = await chromeLauncher.launch({
+      chromeFlags: ["--headless"],
     });
 
     const options = { logLevel: "info", output: "json", port: chrome.port };
 
     const runnerResult = await lighthouse(url, options);
     await chrome.kill();
-    
+
     const { categories } = runnerResult.lhr;
     const reportData = {
       userId: req.user.userId,
@@ -33,13 +33,13 @@ router.post("/generate", verifyToken, async (req, res) => {
 
     const aiReport = await generateGeminiRecommendations(reportData);
     reportData.recommendations = aiReport;
-    
+
     const newReport = new Report(reportData);
     await newReport.save();
 
     res.json(newReport);
   } catch (error) {
-    console.error("Error generating report:", error);
+    console.error("Error generating report:", error.message);
     res.status(500).json({ error: "Failed to generate report" });
   }
 });
