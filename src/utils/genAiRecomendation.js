@@ -58,14 +58,14 @@ Return your response as a object with the following structure:
       ],
     });
 
-    const cleanedJson = result.response.candidates?.[0]?.content?.parts?.[0]?.text
-      .replace(/```json\s*|\s*```/g, '')
-      .trim();
-    
+    const cleanedJson =
+      result.response.candidates?.[0]?.content?.parts?.[0]?.text
+        .replace(/```json\s*|\s*```/g, "")
+        .trim();
+
     let finalResponse;
     try {
       finalResponse = JSON.parse(cleanedJson);
-      console.log("Successfully parsed JSON:", finalResponse);
     } catch (error) {
       console.error("Failed to parse JSON:", error);
     }
