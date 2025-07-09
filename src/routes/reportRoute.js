@@ -28,7 +28,7 @@ router.post("/generate", verifyToken, async (req, res) => {
       seoScore: Math.round(categories.seo.score * 100),
       accessibilityScore: Math.round(categories.accessibility.score * 100),
       bestPracticesScore: Math.round(categories["best-practices"].score * 100),
-      recommendations: '',
+      recommendations: "",
     };
 
     const aiReport = await generateGeminiRecommendations(reportData);
@@ -39,18 +39,18 @@ router.post("/generate", verifyToken, async (req, res) => {
 
     res.json(newReport);
   } catch (error) {
-    console.error("Error generating report:", error.message);
-    res.status(500).json({ error: "Failed to generate report" });
+    res.status(500).json("Failed to generate report");
   }
 });
 
 router.get("/history", verifyToken, async (req, res) => {
   try {
-    const reports = await Report.find({ userId: req.user.userId }).sort({ createdAt: -1 });
+    const reports = await Report.find({ userId: req.user.userId }).sort({
+      createdAt: -1,
+    });
     res.json(reports);
   } catch (error) {
-    console.error("Error fetching report history:", error);
-    res.status(500).json({ error: "Failed to fetch history" });
+    res.status(500).json("Failed to fetch history");
   }
 });
 
