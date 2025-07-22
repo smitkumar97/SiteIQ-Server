@@ -14,7 +14,7 @@ Below is a Lighthouse audit report. Based on the scores and findings, generate *
 3. Accessibility
 4. Best Practices
 
-Return your response as a object with the following structure:
+**IMPORTANT: Return your response as a VALID JSON object with the following structure:**
 
 {
   "Performance": {
@@ -32,25 +32,25 @@ Return your response as a object with the following structure:
   "BestPractices": { ... }
 }
 
-  Here is the report:
+**Do NOT include any extra text, explanations, or markdown formatting like \`\`\`json. Only return the raw JSON object.**
 
-  Performance Score: ${report.performanceScore}
-  SEO Score: ${report.seoScore}
-  Accessibility Score: ${report.accessibilityScore}
-  Best Practices Score: ${report.bestPracticesScore}`;
+Here is the report:
+
+Performance Score: ${report.performanceScore}
+SEO Score: ${report.seoScore}
+Accessibility Score: ${report.accessibilityScore}
+Best Practices Score: ${report.bestPracticesScore}`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        response_mime_type: "application/json",
+      },
+    });
 
-    // Generate content
     const result = await model.generateContent({
       contents: [
-        {
-          role: "user",
-          parts: [
-            { text: "You are an expert in web performance optimization." },
-          ],
-        },
         {
           role: "user",
           parts: [{ text: prompt }],
@@ -58,22 +58,21 @@ Return your response as a object with the following structure:
       ],
     });
 
-    const cleanedJson =
-      result.response.candidates?.[0]?.content?.parts?.[0]?.text
-        .replace(/```json\s*|\s*```/g, "")
-        .trim();
+    const responseText =
+      result.response.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    let finalResponse;
+    const cleanedJson = responseText.replace(/```json\s*|\s*```/g, "").trim();
     try {
-      finalResponse = JSON.parse(cleanedJson);
+      return JSON.parse(cleanedJson);
     } catch (error) {
-      console.error("Failed to parse JSON:", error);
+      console.error("Failed to parse JSON. Raw response:", cleanedJson);
+      throw new Error(
+        "AI returned invalid JSON. Try again or check the prompt."
+      );
     }
-
-    return finalResponse;
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "AI recommendation service is currently unavailable.";
+    throw new Error("AI recommendation service is currently unavailable.");
   }
 }
 
