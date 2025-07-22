@@ -39,7 +39,7 @@ router.post("/generate", verifyToken, async (req, res) => {
 
     res.json(newReport);
   } catch (error) {
-    res.status(500).json("Failed to generate report");
+    res.status(500).json(error);
   }
 });
 
@@ -50,7 +50,7 @@ router.get("/history", verifyToken, async (req, res) => {
     });
     res.json(reports);
   } catch (error) {
-    res.status(500).json("Failed to fetch history");
+    res.status(500).json(error);
   }
 });
 
