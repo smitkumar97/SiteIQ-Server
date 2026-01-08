@@ -316,6 +316,8 @@ router.post("/send", async (req, res) => {
       console.error(err);
       res.status(500).send("Error sending email");
     }
+  } else {
+    res.status(200).send("Not the first visit, no email sent");
   }
 });
 
