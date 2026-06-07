@@ -327,7 +327,6 @@ router.post("/connect", async (req, res) => {
   }
 
   const { userName, userEmail, message, isConnectionRequest } = req.body;
-  console.log(req.body);
 
   if (isConnectionRequest) {
     const transporter = nodemailer.createTransport({
